@@ -10,6 +10,13 @@ def create_task():
     return jsonify('Data from Flask')
 
 COUNT = 0
+TWEETS = ['Tweet 1', 'Tweet 2']
+
+@app.route('/tweetlist')
+def get_tweets():
+    global TWEETS
+    return jsonify(TWEETS)
+
 
 @app.route('/getcount')
 def get_counter():
