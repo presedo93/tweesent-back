@@ -1,24 +1,25 @@
-from flask import Flask
-from flasgger import Swagger
-from routes.home import home
-from flask_cors import CORS
+from typing import Dict
+from fastapi import Depends, FastAPI
+from pydantic import BaseModel
+
+from routes.predict import Predict
 
 
-def create_app():
-  app = Flask(__name__)
+app = FastAPI()
+predict = Predict('/backend/config.json')
 
-  app.register_blueprint(home, url_prefix='/home')
+class SentimentRequest(BaseModel):
+  text: str
 
-  cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-  return app
+class SentimentResponse(BaseModel):
+  text: str
+  probabilities: Dict[str, float]
+  sentiment: str
+  confidence: float
 
-if __name__ == "__main__":
-  from argparse import ArgumentParser
 
-  parser = ArgumentParser()
-  parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
-  args = parser.parse_args()
-
-  app = create_app()
-  app.run(debug=True, host='0.0.0.0', port=args.port)
+@app.post("/predict", response_model=SentimentResponse)
+def predict(request: SentimentRequest, model: Predict = Depends(predict.get_model)):
+  sentiment, confidence, probabilities = model.predict(request.text)
+  return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
