@@ -6,7 +6,7 @@ from routes.tweet import TweeterBack, TweetRequest, TweetResponse
 
 
 app = FastAPI()
-predict = Predict('/backend/config.json')
+#predict = Predict('/backend/config.json')
 tweeter = TweeterBack()
 
 origins = [
@@ -21,10 +21,10 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-@app.post("/predict", response_model=SentimentResponse)
-def predict(request: SentimentRequest, model: Predict = Depends(predict.get_instance)):
-  sentiment, confidence, probabilities = model.predict(request.text)
-  return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
+#@app.post("/predict", response_model=SentimentResponse)
+#def predict(request: SentimentRequest, model: Predict = Depends(predict.get_instance)):
+#sentiment, confidence, probabilities = model.predict(request.text)
+#return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
 
 
 @app.post("/gettweet", response_model=TweetResponse)
