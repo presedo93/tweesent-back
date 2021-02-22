@@ -1,9 +1,23 @@
 import json
 import torch
 import torch.nn.functional as f
+
+from typing import Dict
+from pydantic import BaseModel
 from transformers import BertTokenizer
 
 from models.sentiment import Sentiment
+
+
+class SentimentRequest(BaseModel):
+  text: str
+
+
+class SentimentResponse(BaseModel):
+  text: str
+  probabilities: Dict[str, float]
+  sentiment: str
+  confidence: float
 
 
 class Predict:
@@ -19,7 +33,7 @@ class Predict:
     classifier.eval()
     self.classifier = classifier.to(self.device)
 
-  def get_model(self):
+  def get_instance(self):
     return self
 
   def predict(self, text):
