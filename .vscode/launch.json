@@ -1,19 +1,29 @@
 {
   "configurations": [
-    {
-      "name": "Docker: Python - General",
-      "type": "docker",
+    {​​​​​​​
+      "name": "Python: FastAPI",
+      "type": "python",
       "request": "launch",
-      "preLaunchTask": "docker-run: debug",
-      "python": {
-        "pathMappings": [
-          {
-            "localRoot": "${workspaceFolder}",
-            "remoteRoot": "/backend"
-          }
-        ],
-        "projectType": "general"
+      "module": "uvicorn",
+      "args": [
+      "app:app"
+      ],
+      "jinja": true
+      }​​​​​​​,
+      {
+        "name": "Docker: Python - General",
+        "type": "docker",
+        "request": "launch",
+        "preLaunchTask": "docker-run: debug",
+        "python": {
+          "pathMappings": [
+            {
+              "localRoot": "${workspaceFolder}",
+              "remoteRoot": "/backend"
+            }
+          ],
+          "projectType": "general"
+        }
       }
-    }
   ]
 }
