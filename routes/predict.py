@@ -1,8 +1,9 @@
-import json
+from __future__ import annotations
+
 import torch
 import torch.nn.functional as f
 
-from typing import Dict
+from typing import Dict, Tuple
 from pydantic import BaseModel
 from transformers import BertTokenizer
 
@@ -21,43 +22,41 @@ class SentimentResponse(BaseModel):
 
 
 class Predict:
-  def __init__(self, conf):
-    with open("config.json") as json_file:
-      conf = json.load(json_file)
+  def __init__(self, conf) -> None:
     self.conf = conf
     self.device = torch.device("cpu")
-    self.tokenizer = BertTokenizer.from_pretrained(conf["bert_model"])
+    self.tokenizer = BertTokenizer.from_pretrained(conf["type"])
     classifier = Sentiment(conf)
-    state_dict = torch.load(conf["pretrained_model"], map_location=self.device)
+    state_dict = torch.load(conf["weights"], map_location=self.device)
     classifier.load_state_dict(state_dict, strict=False)
     classifier.eval()
     self.classifier = classifier.to(self.device)
 
-  def get_instance(self):
+  def get_instance(self) -> Predict:
     return self
 
-  def predict(self, text):
+  def predict(self, text) -> Tuple[Dict[str, float], str, float]:
     encoded_text = self.tokenizer.encode_plus(
         text,
-        max_length=self.conf["max_seq_len"],
+        truncation=True,
+        max_length=self.conf["maxSeqLen"],
         add_special_tokens=True,
         return_token_type_ids=False,
-        pad_to_max_length=True,
+        padding=True,
         return_attention_mask=True,
         return_tensors="pt",
     )
 
-    inputs = encoded_text["input_ids"].to(self.device)
-    attention_mask = encoded_text["attention_mask"].to(self.device)
+    encoded_text = {k: v.to(self.device) for k, v in encoded_text.items()}
 
     with torch.no_grad():
-      probabilities = f.softmax(self.classifier(inputs, attention_mask), dim=1)
+      probabilities = f.softmax(self.classifier(encoded_text), dim=1)
     confidence, predicted_cass = torch.max(probabilities, dim=1)
     predicted_cass = predicted_cass.cpu().item()
     probabilities = probabilities.flatten().cpu().numpy().tolist()
 
     return (
-        self.conf["class_names"][predicted_cass],
+        self.conf["classes"][predicted_cass],
         confidence,
-        dict(zip(self.conf["class_names"], probabilities)),
+        dict(zip(self.conf["classes"], probabilities)),
         )

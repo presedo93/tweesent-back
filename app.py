@@ -1,3 +1,4 @@
+import json
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,9 +6,12 @@ from routes.predict import Predict, SentimentRequest, SentimentResponse
 from routes.tweet import TweeterBack, TweetRequest, TweetResponse
 
 
+with open("config.json") as json_file:
+  conf = json.load(json_file)
+
 app = FastAPI()
-#predict = Predict('/backend/config.json')
-tweeter = TweeterBack()
+predict = Predict(conf["bert"])
+tweeter = TweeterBack(conf["tweepy"])
 
 origins = [
   "http://localhost:8080",
@@ -21,10 +25,10 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-#@app.post("/predict", response_model=SentimentResponse)
-#def predict(request: SentimentRequest, model: Predict = Depends(predict.get_instance)):
-#sentiment, confidence, probabilities = model.predict(request.text)
-#return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
+@app.post("/predict", response_model=SentimentResponse)
+def predict(request: SentimentRequest, model: Predict = Depends(predict.get_instance)):
+  sentiment, confidence, probabilities = model.predict(request.text)
+  return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
 
 
 @app.post("/gettweet", response_model=TweetResponse)

@@ -1,10 +1,18 @@
 {
-  "bert_model": "bert-base-cased",
-  "pretrained_model": "assets/model_state_dict.bin",
-  "class_names": [
+  "tweepy": {
+    "consumerKey": "IOUuOWRk0DQiFzPcilzEDvJfU",
+    "consumerSecret": "Fe4fzMbq4ixXM2qp2wOqrqyTXyuBMuPyXCG7s0nPzVcge7FtKl",
+    "accessToken": "1329499640773943297-cBwv4waJK5wGzat1jCUcw7pt4qOwOb",
+    "accessTokenSecret": "6ZmaNh8NQpgB0FDvX2aQIsAgQxf9Lk7JA2bU1VmCJiH4x"
+  },
+  "bert": {
+    "type": "bert-base-cased",
+    "weights": "assets/model_state_dict.bin",
+    "classes": [
       "negative",
       "neutral",
       "positive"
-  ],
-  "max_seq_len": 160
+    ],
+    "maxSeqLen": 160
+  }
 }
