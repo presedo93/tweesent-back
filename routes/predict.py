@@ -32,9 +32,6 @@ class Predict:
     classifier.eval()
     self.classifier = classifier.to(self.device)
 
-  def get_instance(self) -> Predict:
-    return self
-
   def predict(self, text) -> Tuple[Dict[str, float], str, float]:
     encoded_text = self.tokenizer.encode_plus(
         text,
@@ -52,11 +49,8 @@ class Predict:
     with torch.no_grad():
       probabilities = f.softmax(self.classifier(encoded_text), dim=1)
     confidence, predicted_cass = torch.max(probabilities, dim=1)
-    predicted_cass = predicted_cass.cpu().item()
-    probabilities = probabilities.flatten().cpu().numpy().tolist()
 
     return (
-        self.conf["classes"][predicted_cass],
+        self.conf["classes"][predicted_cass.cpu().item()],
         confidence.cpu().item(),
-        # dict(zip(self.conf["classes"], probabilities)),
         )

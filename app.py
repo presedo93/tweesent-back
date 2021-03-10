@@ -35,8 +35,8 @@ async def predict(request: SentimentRequest):
 async def search(request: TweetRequest, count: int = 200):
   start = time.time()
   tweets = tweet_api.search(request.text, count=count)
+  print(f'Fetch tweets: {round(time.time() - start, 3)}s')
   for tw in tweets:
-    # tw['sentiment'], tw['confidence'], tw['probabilities'] = torch_nlp.predict(tw['text'])
     tw['sentiment'], tw['confidence'] = torch_nlp.predict(tweet_api.re_tweet(tw['text']))
-  print(f'Time spent: {time.time() - start}')
+  print(f'Process time: {round(time.time() - start, 3)}s')
   return TweetResponse(tweets=tweets)
