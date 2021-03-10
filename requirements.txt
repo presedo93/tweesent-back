@@ -4,6 +4,7 @@ transformers
 pydantic
 fastapi
 uvicorn[standard]
+emoji
 tweepy
 torch
 gdown

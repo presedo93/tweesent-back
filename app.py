@@ -1,4 +1,5 @@
 import json
+import time
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,8 +31,12 @@ async def predict(request: SentimentRequest):
   sentiment, confidence, probabilities = torch_nlp.predict(request.text)
   return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
 
-
 @app.post("/gettweet", response_model=TweetResponse)
-def search(request: TweetRequest, count: int = 0):
+async def search(request: TweetRequest, count: int = 200):
+  start = time.time()
   tweets = tweet_api.search(request.text, count=count)
+  for tw in tweets:
+    # tw['sentiment'], tw['confidence'], tw['probabilities'] = torch_nlp.predict(tw['text'])
+    tw['sentiment'], tw['confidence'] = torch_nlp.predict(tweet_api.re_tweet(tw['text']))
+  print(f'Time spent: {time.time() - start}')
   return TweetResponse(tweets=tweets)

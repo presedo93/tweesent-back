@@ -1,7 +1,8 @@
 from __future__ import annotations
 import re
+import emoji
 import tweepy
-from typing import List, Dict
+from typing import List, Dict, Any
 from pydantic import BaseModel
 
 
@@ -10,7 +11,7 @@ class TweetRequest(BaseModel):
 
 
 class TweetResponse(BaseModel):
-  tweets: List[Dict[str, str]]
+  tweets: List[Dict[str, Any]]
 
 
 class TweeterBack:
@@ -34,7 +35,7 @@ class TweeterBack:
 
   def search(self, input: str, count: int = 50) -> List:
     posts = self.api.search(q=input, count=count, lang="en", tweet_mode="extended")
-    return [{'id': t.id, 'name': t.author.screen_name, 'text': self.re_tweet(t.full_text)} for t in posts]
+    return [{'id': t.id, 'name': t.author.screen_name, 'text': t.full_text} for t in posts]
 
   # https://medium.com/analytics-vidhya/working-with-twitter-data-b0aa5419532
   def re_urls(self, text: str) -> str:
@@ -46,5 +47,8 @@ class TweeterBack:
   def re_carr(self, text: str) -> str:
     return re.sub(r'\n', '', text, flags=re.MULTILINE)
 
+  def re_emoji(self, text: str) -> str:
+    return emoji.get_emoji_regexp().sub(u'', text)
+
   def re_tweet(self, text: str) -> str:
-    return self.re_carr(self.re_hash(self.re_urls(text)))
+    return self.re_carr(self.re_hash(self.re_urls(self.re_emoji(text))))

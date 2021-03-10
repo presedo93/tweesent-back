@@ -57,6 +57,6 @@ class Predict:
 
     return (
         self.conf["classes"][predicted_cass],
-        confidence,
-        dict(zip(self.conf["classes"], probabilities)),
+        confidence.cpu().item(),
+        # dict(zip(self.conf["classes"], probabilities)),
         )
