@@ -11,7 +11,7 @@ class TweetRequest(BaseModel):
 
 
 class TweetResponse(BaseModel):
-  tweets: List[Dict[str, Any]]
+  tweets: List[Dict[str, str]]
 
 
 class TweeterBack:
