@@ -1,3 +1,5 @@
+import json
+import time
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,9 +7,12 @@ from routes.predict import Predict, SentimentRequest, SentimentResponse
 from routes.tweet import TweeterBack, TweetRequest, TweetResponse
 
 
+with open("config.json") as json_file:
+  conf = json.load(json_file)
+
 app = FastAPI()
-#predict = Predict('/backend/config.json')
-tweeter = TweeterBack()
+torch_nlp = Predict(conf["bert"])
+tweet_api = TweeterBack(conf["tweepy"])
 
 origins = [
   "http://localhost:8080",
@@ -21,13 +26,17 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-#@app.post("/predict", response_model=SentimentResponse)
-#def predict(request: SentimentRequest, model: Predict = Depends(predict.get_instance)):
-#sentiment, confidence, probabilities = model.predict(request.text)
-#return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
-
+@app.post("/predict", response_model=SentimentResponse)
+async def predict(request: SentimentRequest):
+  sentiment, confidence, probabilities = torch_nlp.predict(request.text)
+  return SentimentResponse(text=request.text, sentiment=sentiment, confidence=confidence, probabilities=probabilities)
 
 @app.post("/gettweet", response_model=TweetResponse)
-def search(request: TweetRequest, api: TweeterBack = Depends(tweeter.get_instance)):
-  tweets = api.search(request.text, count=1)
+async def search(request: TweetRequest, count: int = 200):
+  start = time.time()
+  tweets = tweet_api.search(request.text, count=count)
+  print(f'Fetch tweets: {round(time.time() - start, 3)}s')
+  for tw in tweets:
+    tw['sentiment'], tw['confidence'] = torch_nlp.predict(tweet_api.re_tweet(tw['text']))
+  print(f'Process time: {round(time.time() - start, 3)}s')
   return TweetResponse(tweets=tweets)
