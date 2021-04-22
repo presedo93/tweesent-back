@@ -36,23 +36,39 @@ class TweeterBack:
         self.api = tweepy.API(authenticate, wait_on_rate_limit=True)
 
     def search(self, input: str, count: int = 50) -> List[Dict[str, Any]]:
-        posts = self.api.search(q=input, count=count, lang="en", tweet_mode="extended")
         return [
-            {"id": t.id, "name": t.author.screen_name, "text": self.regex_tweets(t.full_text)}
-            for t in posts
+            {
+                "id": t.id,
+                "name": t.author.screen_name,
+                "text": self.regex_tweets(t.full_text),
+            }
+            for t in tweepy.Cursor(
+                self.api.search,
+                q=input,
+                lang="en",
+                tweet_mode="extended",
+            ).items(count)
         ]
 
     def user(self, input: str, count: int = 50) -> List[Dict[str, Any]]:
-        posts = self.api.user_timeline(screen_name=input, count=count, exclude_replies=True)
         return [
-            {"id": t.id, "name": t.user.screen_name, "text": self.regex_tweets(t.text)}
-            for t in posts
+            {
+                "id": t.id,
+                "name": t.user.screen_name,
+                "text": self.regex_tweets(t.full_text),
+            }
+            for t in tweepy.Cursor(
+                self.api.user_timeline,
+                screen_name=input.replace("@", ""),
+                exclude_replies=True,
+                tweet_mode="extended",
+            ).items(count)
         ]
 
     def regex_tweets(self, text: str) -> str:
         expr = [
             r"https?:\/\/.*[\r\n]*",  # URLs
-            r"R?T?@\w*",  # Users
+            r"R?T? ?@\w*",  # Users
             r"\B#\w*[a-zA-Z]+\w*",  # Hashtags
             r"\n",  # Carriage Returns
         ]
@@ -60,3 +76,7 @@ class TweeterBack:
         for e in expr:
             text = re.sub(e, "", text, flags=re.MULTILINE)
         return emoji.get_emoji_regexp().sub(u"", text)
+
+    @staticmethod
+    def is_user(user):
+        return " " not in user and "@" == user[0]

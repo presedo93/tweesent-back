@@ -30,7 +30,7 @@ app.add_middleware(
 @app.post("/gettweet", response_model=TweetResponse)
 def search(request: TweetRequest, count: int = 50):
     # If text starts with @ and is only one word.
-    if len(request.text.split()) == 1 and "@" == list(request.text)[0]:
+    if tweet_api.is_user(request.text):
         tweets = tweet_api.user(request.text, count=count)
     else:
         tweets = tweet_api.search(request.text, count=count)
