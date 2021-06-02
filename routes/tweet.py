@@ -39,8 +39,12 @@ class TweeterBack:
         return [
             {
                 "id": t.id,
-                "name": t.author.screen_name,
+                "created": t.created_at.strftime("%I:%M %p · %B %d, %Y"),
+                "name": t.user.screen_name,
+                "user": t.user.name,
+                "img": t.user.profile_image_url,
                 "text": self.regex_tweets(t.full_text),
+                "raw_text": t.full_text
             }
             for t in tweepy.Cursor(
                 self.api.search,
