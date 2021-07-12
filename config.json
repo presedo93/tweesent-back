@@ -1,5 +1,6 @@
 {
   "tweepy": {
+    "bearerToken": "AAAAAAAAAAAAAAAAAAAAAJKQLgEAAAAADdeyU42JaSZogJ7NniUx6pqGE9Y%3D0mS0ZTYyO72Ek1LNH3sm0KbL4tQouBCowJe1wc08xE9Q1igaEw",
     "consumerKey": "IOUuOWRk0DQiFzPcilzEDvJfU",
     "consumerSecret": "Fe4fzMbq4ixXM2qp2wOqrqyTXyuBMuPyXCG7s0nPzVcge7FtKl",
     "accessToken": "1329499640773943297-cBwv4waJK5wGzat1jCUcw7pt4qOwOb",
