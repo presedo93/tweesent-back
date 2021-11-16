@@ -1,10 +1,12 @@
-# To ensure app dependencies are ported from your virtual environment/host machine into your container, run 'pip freeze > requirements.txt' in the terminal to overwrite this file
-numpy
-transformers
-pydantic
-fastapi
-uvicorn[standard]
-emoji
+# Text & Twitter
 tweepy
+emoji
+
+# Deep Learning & NLP
 torch
-gdown
+transformers
+
+# FastAPI & Uvicorn
+uvicorn[standard]
+fastapi
+pydantic

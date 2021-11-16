@@ -1,86 +1,58 @@
-from __future__ import annotations
-import re
-import emoji
 import tweepy
-from enum import Enum
-from typing import List, Dict, Any
-from pydantic import BaseModel
+from typing import List, Dict, Any, Tuple
 
 
-class TweetRequest(BaseModel):
-    text: str
+class TweeSentClient:
+    def __init__(self, keys: Dict) -> None:
+        bearer_token = keys["bearerToken"]
+        consumer_key = keys["consumerKey"]
+        consumer_secret = keys["consumerSecret"]
+        access_token = keys["accessToken"]
+        access_token_secret = keys["accessTokenSecret"]
 
+        self.client = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret)
 
-class TweetResponse(BaseModel):
-    tweets: List[Dict[str, str]]
+    def search_recent_tweets(self, query: str, max_results: int = 100) -> List[Dict[str, Any]]:
+        tweets, includes = list(), list()
 
+        max_results, iters, rest = self.get_pagination(max_results)
 
-class ErrorResponse(BaseModel):
-    err: str
+        rsp = self.client.search_recent_tweets(query, max_results=max_results, expansions=["author_id"])
+        tweets += rsp.data
+        includes += rsp.includes
 
+        for _ in range(iters):
+            rsp = self.client.search_recent_tweets(query, max_results=max_results, expansions=["author_id"], next_token=rsp.meta["next_token"])
+            tweets += rsp.data
+            includes += rsp.includes
 
-class TweeterBack:
-    def __init__(self, conf) -> None:
-        consumer_key = conf["consumerKey"]
-        consumer_secret = conf["consumerSecret"]
-        access_token = conf["accessToken"]
-        access_token_secret = conf["accessTokenSecret"]
+        return tweets[:-rest]
 
-        # Create the authentication object
-        authenticate = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    def get_users_tweets(self, username: str, max_results: int = 100, exclude: List[str] = ["retweets", "replies"]) -> List[Dict[str, Any]]:
+        # List to store all the tweets fetched.
+        tweets = list()
 
-        # Set the access token and access token secret
-        authenticate.set_access_token(access_token, access_token_secret)
+        # With APIv2 we can get the user data from username.
+        user = self.client.get_user(username=username)
 
-        # Creating the API object while passing in auth information
-        self.api = tweepy.API(authenticate, wait_on_rate_limit=True)
+        max_results, iters, rest = self.get_pagination(max_results)
+        
+        # Just make a first fetch.
+        rsp = self.client.get_users_tweets(user.data.id, max_results=max_results, exclude=exclude)
+        tweets += rsp.data
 
-    def search(self, input: str, count: int = 50) -> List[Dict[str, Any]]:
-        return [
-            {
-                "id": t.id,
-                "created": t.created_at.strftime("%I:%M %p · %B %d, %Y"),
-                "name": t.user.screen_name,
-                "user": t.user.name,
-                "img": t.user.profile_image_url,
-                "text": self.regex_tweets(t.full_text),
-                "raw_text": t.full_text
-            }
-            for t in tweepy.Cursor(
-                self.api.search,
-                q=input,
-                lang="en",
-                tweet_mode="extended",
-            ).items(count)
-        ]
+        # And then the rest until get the max_results.
+        for _ in range(iters):
+            rsp = self.client.get_users_tweets(user.data.id, max_results=100, exclude=exclude, pagination_token=rsp.meta["next_token"])
+            tweets += rsp.data
 
-    def user(self, input: str, count: int = 50) -> List[Dict[str, Any]]:
-        return [
-            {
-                "id": t.id,
-                "name": t.user.screen_name,
-                "text": self.regex_tweets(t.full_text),
-            }
-            for t in tweepy.Cursor(
-                self.api.user_timeline,
-                screen_name=input.replace("@", ""),
-                exclude_replies=True,
-                tweet_mode="extended",
-            ).items(count)
-        ]
-
-    def regex_tweets(self, text: str) -> str:
-        expr = [
-            r"https?:\/\/.*[\r\n]*",  # URLs
-            r"R?T? ?@\w*",  # Users
-            r"\B#\w*[a-zA-Z]+\w*",  # Hashtags
-            r"\n",  # Carriage Returns
-        ]
-
-        for e in expr:
-            text = re.sub(e, "", text, flags=re.MULTILINE)
-        return emoji.get_emoji_regexp().sub(u"", text)
+        return tweets[:-rest]
 
     @staticmethod
-    def is_user(user):
-        return " " not in user and "@" == user[0]
+    def get_pagination(max_results: int) -> Tuple[int, int, int]:
+        # If we want to search for more than 100 results we need to set everything for pagination tokens.
+        rest = 100 - max_results % 100 if max_results > 100 else -max_results
+        iters = max_results // 100 if max_results > 100 else 0
+        max_results = 100 if max_results > 100 else max_results
+
+        return max_results, iters, rest

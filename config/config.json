@@ -1,0 +1,12 @@
+{
+  "bert": {
+    "type": "bert-base-cased",
+    "weights": "assets/model_state_dict.bin",
+    "classes": [
+      "negative",
+      "neutral",
+      "positive"
+    ],
+    "maxSeqLen": 160
+  }
+}
