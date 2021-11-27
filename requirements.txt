@@ -10,3 +10,6 @@ transformers
 uvicorn[standard]
 fastapi
 pydantic
+
+# Others
+pre-commit

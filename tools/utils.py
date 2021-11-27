@@ -3,18 +3,7 @@ import os
 import json
 import emoji
 
-from typing import Dict, List
-from pydantic import BaseModel
-
-
-class TweetRequest(BaseModel):
-    query: str
-    max_results: int
-
-
-
-class TweetResponse(BaseModel):
-    tweets: List[Dict[str, str]]
+from typing import Dict
 
 
 def open_conf(conf_path: str) -> Dict:
@@ -31,6 +20,15 @@ def open_conf(conf_path: str) -> Dict:
 
 
 def regex_tweets(self, text: str) -> str:
+    """Clears the raw data of URLs, users mentions, hashtags
+    and carriage returns.
+
+    Args:
+        text (str): raw text of the tweet.
+
+    Returns:
+        str: cleared text.
+    """
     expr = [
         r"https?:\/\/.*[\r\n]*",  # URLs
         r"R?T? ?@\w*",  # Users

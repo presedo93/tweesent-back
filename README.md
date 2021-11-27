@@ -2,7 +2,10 @@
 
 Pending to be properly documented...
 
-## Test the network
-To test an example message to the backend:
+## Pre commits hooks
 
-    http POST http://0.0.0.0:5000/predict text="This app is a total waste of time"
+Once downloaded the repo, and installed the needed packages in `requirements.txt`... it is desirable to install the git hooks for this repo!
+
+    pre-commit install
+
+This will install git hooks such as `black`, `flake8` or `mypy`.

@@ -1,12 +1,12 @@
-import asyncio
-
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.predict import Predict, SentimentRequest, SentimentResponse
+# from routes.predict import Predict, SentimentRequest, SentimentResponse
 from routes.tweet import TweeSentClient
 from routes.stream import TweeSentStream
-from tools.utils import open_conf, TweetRequest, TweetResponse
+
+from tools.utils import open_conf
+from tools.models import TweetIn, TweetOut
 
 
 conf = open_conf("config/config.json")
@@ -16,9 +16,7 @@ app = FastAPI()
 # torch_nlp = Predict(conf["bert"])
 twitter_client = TweeSentClient(keys)
 
-origins = [
-    "http://localhost:8080",
-]
+origins = ["http://localhost:8080"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,29 +27,30 @@ app.add_middleware(
 )
 
 
-@app.post("/search_recent_tweets", response_model=TweetResponse)
-def search(request: TweetRequest, count: int = 50):
-    # If text starts with @ and is only one word.
-    if tweet_api.is_user(request.text):
-        tweets = tweet_api.user(request.text, count=count)
+@app.post("/search_tweets", response_model=TweetOut)
+def search_tweets(request: TweetIn):
+    if request.query[0] != "@":
+        data, users, token = twitter_client.search_tweets(
+            request.query, request.max_results, request.token
+        )
     else:
-        tweets = tweet_api.search(request.text, count=count)
+        data, users, token = twitter_client.user_tweets(
+            request.query[1:], request.max_results, request.token
+        )
 
-@app.get("/search_user_tweets/{query}/{max_results}")
-def search(query: str, max_results: int = 100):
-    tweets = twitter_client.get_users_tweets(query, max_results)
+    # TODO: Replace for the DL inferencing.
+    tweets = [TweeSentClient.compose_tweet(d, u) for d, u in zip(data, users)]
 
-    # for tw in tweets:
-    #     tw["sentiment"], tw["confidence"] = torch_nlp.predict(tw["text"])
-    # return TweetResponse(tweets=tweets)
-    return tweets
+    return TweetOut(tweets=tweets, token=token)
 
-@app.websocket("/stream")
-async def websocket_stream(websocket: WebSocket):
+
+@app.websocket("/stream/{interval}/{filter}")
+async def websocket_stream(websocket: WebSocket, filter: str, interval: int):
     await websocket.accept()
-    stream = TweeSentStream(conf["tweepy"])
-    while True:
-        # data = await websocket.receive_text()
-        # data = await stream.on_data()
-        await asyncio.sleep(10)
-        await websocket.send_text(f"Message text was: {2}")
+    stream = TweeSentStream(keys, filter, interval)
+    try:
+        while True:
+            tweet = await stream.tweets.get()
+            await websocket.send_json(tweet)
+    except BaseException:
+        stream.aclient.disconnect()
