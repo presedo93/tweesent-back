@@ -6,6 +6,11 @@ import emoji
 from typing import Dict
 
 
+def weights_folder() -> None:
+    if os.path.exists("weights/") is False:
+        os.makedirs("weights/", exist_ok=True)
+
+
 def open_conf(conf_path: str) -> Dict:
     """Loads the config JSON.
     Args:
@@ -19,7 +24,7 @@ def open_conf(conf_path: str) -> Dict:
     return conf
 
 
-def regex_tweets(self, text: str) -> str:
+def regex_tweets(text: str) -> str:
     """Clears the raw data of URLs, users mentions, hashtags
     and carriage returns.
 

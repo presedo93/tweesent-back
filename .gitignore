@@ -13,3 +13,6 @@ venv/
 
 # Twitter keys
 config/keys.json
+
+# Exported models
+weights/

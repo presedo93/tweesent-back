@@ -101,12 +101,13 @@ class TweeSentClient:
         return rsp.data, users, rsp.meta["next_token"]
 
     @staticmethod
-    def compose_tweet(data: Dict, user: Dict) -> Dict:
+    def compose_tweet(data: Dict, user: Dict, pred: str = None) -> Dict:
         """Compose a tweet dict for TweeSent frontend.
 
         Args:
             data (Dict): data fields from the API.
             user (Dict): user fields from the API.
+            pred (str): prediction done by the NN.
 
         Returns:
             Dict: dict with the user and data info.
@@ -120,4 +121,5 @@ class TweeSentClient:
             "username": user["username"],
             "name": user["name"],
             "image": user["profile_image_url"],
+            "sentiment": pred if pred is not None else "error",
         }

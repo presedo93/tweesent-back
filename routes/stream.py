@@ -4,9 +4,14 @@ import asyncio
 from typing import Any, Dict
 from tweepy.asynchronous import AsyncStream
 
+from tools.utils import regex_tweets
+from routes.predict import OnnxPredict
+
 
 class TweeSentStream:
-    def __init__(self, keys: Dict, filter: str, interval: int) -> None:
+    def __init__(
+        self, keys: Dict, infer: OnnxPredict, filter: str, interval: int
+    ) -> None:
         """Constructor of the TweeSentStream class. It connects with
         the tweepy class and creates the Queue to handle the received
         tweets.
@@ -20,6 +25,9 @@ class TweeSentStream:
         consumer_secret = keys["consumerSecret"]
         access_token = keys["accessToken"]
         access_token_secret = keys["accessTokenSecret"]
+
+        # The predict class
+        self.infer = infer
 
         # Create the asynchronous tweepy client.
         self.aclient = AsyncStream(
@@ -46,15 +54,22 @@ class TweeSentStream:
         """
         await asyncio.sleep(self.interval)
         data = json.loads(raw_data.decode("utf8"))
-        tweet = self.compose_tweet(data)
+        text = (
+            data["extended_tweet"]["full_text"]
+            if "extended_tweet" in data
+            else data["text"]
+        )
+        pred = self.infer.predict(regex_tweets(text))
+        tweet = self.compose_tweet(data, pred)
         await self.tweets.put(tweet)
 
     @staticmethod
-    def compose_tweet(data: Dict) -> Dict:
+    def compose_tweet(data: Dict, pred: str = None) -> Dict:
         """Compose a dict with the tweet data based on its fields.
 
         Args:
             data (Dict): raw data of the tweet.
+            pred (str): prediction done by the NN.
 
         Returns:
             Dict: new dict with the desired format.
@@ -70,4 +85,5 @@ class TweeSentStream:
             "username": data["user"]["screen_name"],
             "name": data["user"]["name"],
             "image": data["user"]["profile_image_url"],
+            "sentiment": pred if pred is not None else "error",
         }

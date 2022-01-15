@@ -1,56 +1,29 @@
-# from __future__ import annotations
+import numpy as np
+import onnxruntime as ort
 
-# import torch
-# import torch.nn.functional as f
-
-# from typing import Dict, Tuple
-# from pydantic import BaseModel
-# from transformers import BertTokenizer
-
-# from models.sentiment import Sentiment
+from typing import Dict
+from transformers import AutoTokenizer
 
 
-# class SentimentRequest(BaseModel):
-#     text: str
+class OnnxPredict:
+    labels = ["negative", "neutral", "positive"]
 
+    def __init__(self, conf: Dict) -> None:
+        self.tokenizer = AutoTokenizer.from_pretrained(conf["tokenizer"])
+        self.model = ort.InferenceSession(
+            conf["model"], providers=["CUDAExecutionProvider"]
+        )
 
-# class SentimentResponse(BaseModel):
-#     text: str
-#     probabilities: Dict[str, float]
-#     sentiment: str
-#     confidence: float
+        self.attention_mask = self.model.get_inputs()[0].name
+        self.input_ids = self.model.get_inputs()[1].name
 
+        self.labels = conf["classes"]
 
-# class Predict:
-#     def __init__(self, conf) -> None:
-#         self.conf = conf
-#         self.device = torch.device("cpu")
-#         self.tokenizer = BertTokenizer.from_pretrained(conf["type"])
-#         classifier = Sentiment(conf)
-#         state_dict = torch.load(conf["weights"], map_location=self.device)
-#         classifier.load_state_dict(state_dict, strict=False)
-#         classifier.eval()
-#         self.classifier = classifier.to(self.device)
-
-#     def predict(self, text) -> Tuple[Dict[str, float], str, float]:
-#         encoded_text = self.tokenizer.encode_plus(
-#             text,
-#             truncation=True,
-#             max_length=self.conf["maxSeqLen"],
-#             add_special_tokens=True,
-#             return_token_type_ids=False,
-#             padding=True,
-#             return_attention_mask=True,
-#             return_tensors="pt",
-#         )
-
-#         encoded_text = {k: v.to(self.device) for k, v in encoded_text.items()}
-
-#         with torch.no_grad():
-#             probabilities = f.softmax(self.classifier(encoded_text), dim=1)
-#         confidence, predicted_cass = torch.max(probabilities, dim=1)
-
-#         return (
-#             self.conf["classes"][predicted_cass.cpu().item()],
-#             confidence.cpu().item(),
-#         )
+    def predict(self, tweet: str) -> str:
+        sample = self.tokenizer(tweet, truncation=True)
+        f_inputs = {
+            self.attention_mask: np.expand_dims(sample["attention_mask"], axis=0),
+            self.input_ids: np.expand_dims(sample["input_ids"], axis=0),
+        }
+        out = self.model.run(None, f_inputs)
+        return self.labels[out[0].argmax()]

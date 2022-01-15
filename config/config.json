@@ -1,12 +1,5 @@
 {
-  "bert": {
-    "type": "bert-base-cased",
-    "weights": "assets/model_state_dict.bin",
-    "classes": [
-      "negative",
-      "neutral",
-      "positive"
-    ],
-    "maxSeqLen": 160
-  }
+  "model": "weights/disti.onnx",
+  "tokenizer": "bert-base-cased",
+  "classes": ["negative", "neutral", "positive"]
 }

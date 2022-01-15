@@ -6,6 +6,9 @@ emoji
 torch
 transformers
 
+# Inference
+onnxruntime-gpu
+
 # FastAPI & Uvicorn
 uvicorn[standard]
 fastapi
