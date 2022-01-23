@@ -3,16 +3,14 @@ tweepy
 emoji
 
 # Deep Learning & NLP
-torch
 transformers
-
-# Inference
 onnxruntime-gpu
 
 # FastAPI & Uvicorn
 uvicorn[standard]
-fastapi
 pydantic
+fastapi
+aiohttp
 
 # Others
 pre-commit
