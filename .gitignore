@@ -9,7 +9,10 @@ __pycache__/
 *$py.class
 
 # Environments
-venv/
+.env
+.venv/
+.python-version
+poetry.lock
 
 # Twitter keys
 config/keys.json

@@ -1,20 +1,19 @@
 import tweepy
-from typing import List, Dict, Any, Tuple
+
+from typing import List, Dict, Any, Tuple, Union
+from tools.settings import settings
 
 
 class TweeSentClient:
-    def __init__(self, keys: Dict) -> None:
+    def __init__(self) -> None:
         """TweeSentClient constructor that connects with the Twitter
         APIv2.
-
-        Args:
-            keys (Dict): keys for the Twitter APIv2.
         """
-        bearer_token = keys["bearerToken"]
-        consumer_key = keys["consumerKey"]
-        consumer_secret = keys["consumerSecret"]
-        access_token = keys["accessToken"]
-        access_token_secret = keys["accessTokenSecret"]
+        bearer_token = settings.BEARER_TOKEN
+        consumer_key = settings.CONSUMER_KEY
+        consumer_secret = settings.CONSUMERT_SECRET
+        access_token = settings.ACCESS_TOKEN
+        access_token_secret = settings.ACCESS_TOKEN_SECRET
 
         self.client = tweepy.Client(
             bearer_token,
@@ -28,7 +27,7 @@ class TweeSentClient:
         self,
         query: str,
         max_results: int = 100,
-        next_token: str = None,
+        next_token: Union[str, None] = None,
         filter: str = "-is:retweet",
     ) -> Tuple[List[Any], List[Any], str]:
         """Search a batch of tweets smaller than 100 (apiV2 limit). It includes
@@ -63,7 +62,7 @@ class TweeSentClient:
         self,
         username: str,
         max_results: int = 100,
-        next_token: str = None,
+        next_token: Union[str, None] = None,
         exclude: List[str] = ["retweets", "replies"],
     ) -> Tuple[List[Any], List[Any], str]:
         """Search the max_results tweets of a user. It includes user info
@@ -101,7 +100,7 @@ class TweeSentClient:
         return rsp.data, users, rsp.meta["next_token"]
 
     @staticmethod
-    def compose_tweet(data: Dict, user: Dict, pred: str = None) -> Dict:
+    def compose_tweet(data: Dict, user: Dict, pred: Union[str, None] = None) -> Dict:
         """Compose a tweet dict for TweeSent frontend.
 
         Args:
@@ -112,6 +111,11 @@ class TweeSentClient:
         Returns:
             Dict: dict with the user and data info.
         """
+        # TODO: remove these two lines!
+        import random
+
+        sents = ["negative", "neutral", "positive"]
+
         return {
             "id": str(data["id"]),
             "text": data["text"],
@@ -121,5 +125,6 @@ class TweeSentClient:
             "username": user["username"],
             "name": user["name"],
             "image": user["profile_image_url"],
-            "sentiment": pred if pred is not None else "error",
+            # "sentiment": pred if pred is not None else "error",
+            "sentiment": sents[random.randint(0, 2)],
         }

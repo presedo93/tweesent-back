@@ -6,25 +6,23 @@ from tweepy.asynchronous import AsyncStream
 
 from tools.utils import regex_tweets
 from routes.predict import OnnxPredict
+from tools.settings import settings
 
 
 class TweeSentStream:
-    def __init__(
-        self, keys: Dict, infer: OnnxPredict, filter: str, interval: int
-    ) -> None:
+    def __init__(self, infer: OnnxPredict, filter: str, interval: int) -> None:
         """Constructor of the TweeSentStream class. It connects with
         the tweepy class and creates the Queue to handle the received
         tweets.
 
         Args:
-            keys (Dict): dict with the kyes to connect to Twitter API.
             filter (str): key words to match with the tweets.
             interval (int): seconds to stop per tweet found.
         """
-        consumer_key = keys["consumerKey"]
-        consumer_secret = keys["consumerSecret"]
-        access_token = keys["accessToken"]
-        access_token_secret = keys["accessTokenSecret"]
+        consumer_key = settings.CONSUMER_KEY
+        consumer_secret = settings.CONSUMERT_SECRET
+        access_token = settings.ACCESS_TOKEN
+        access_token_secret = settings.ACCESS_TOKEN_SECRET
 
         # The predict class
         self.infer = infer

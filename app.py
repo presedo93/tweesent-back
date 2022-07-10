@@ -7,20 +7,21 @@ from routes.stream import TweeSentStream
 
 from tools.models import TweetIn, TweetOut
 from tools.utils import open_conf, regex_tweets, weights_folder
+from tools.settings import settings
 
 
+# Load the configs and variables
 conf = open_conf("config/config.json")
-keys = open_conf("config/keys.json")
 
-app = FastAPI()
+# Global objects
+app = FastAPI(title=settings.NAME, description=settings.DESCRIPTION)
 inference = OnnxPredict(conf)
-twitter_client = TweeSentClient(keys)
+twitter_client = TweeSentClient()
 
-origins = ["http://localhost:8080"]
-
+# FastAPI basic middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,7 +55,7 @@ def search_tweets(request: TweetIn):
 @app.websocket("/stream/{interval}/{filter}")
 async def websocket_stream(websocket: WebSocket, filter: str, interval: int):
     await websocket.accept()
-    stream = TweeSentStream(keys, inference, filter, interval)
+    stream = TweeSentStream(inference, filter, interval)
     try:
         while True:
             tweet = await stream.tweets.get()
