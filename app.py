@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.predict import OnnxPredict
+# from routes.predict import OnnxPredict
 from routes.tweet import TweeSentClient
 from routes.stream import TweeSentStream
 
@@ -15,13 +15,13 @@ conf = open_conf("config/config.json")
 
 # Global objects
 app = FastAPI(title=settings.NAME, description=settings.DESCRIPTION)
-inference = OnnxPredict(conf)
+# inference = OnnxPredict(conf)
 twitter_client = TweeSentClient()
 
 # FastAPI basic middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,18 +44,20 @@ def search_tweets(request: TweetIn):
             request.query[1:], request.max_results, request.token
         )
 
-    tweets = [
-        TweeSentClient.compose_tweet(d, u, inference.predict(regex_tweets(d["text"])))
-        for d, u in zip(data, users)
-    ]
+    # tweets = [
+    #     TweeSentClient.compose_tweet(d, u, inference.predict(regex_tweets(d["text"])))
+    #     for d, u in zip(data, users)
+    # ]
 
+    tweets = [TweeSentClient.compose_tweet(d, u) for d, u in zip(data, users)]
     return TweetOut(tweets=tweets, token=token)
 
 
-@app.websocket("/stream/{interval}/{filter}")
+@app.websocket("/stream_tweets/{filter}/{interval}")
 async def websocket_stream(websocket: WebSocket, filter: str, interval: int):
     await websocket.accept()
-    stream = TweeSentStream(inference, filter, interval)
+    # stream = TweeSentStream(inference, filter, interval)
+    stream = TweeSentStream(None, filter, interval)
     try:
         while True:
             tweet = await stream.tweets.get()

@@ -11,7 +11,7 @@ class TweeSentClient:
         """
         bearer_token = settings.BEARER_TOKEN
         consumer_key = settings.CONSUMER_KEY
-        consumer_secret = settings.CONSUMERT_SECRET
+        consumer_secret = settings.CONSUMER_SECRET
         access_token = settings.ACCESS_TOKEN
         access_token_secret = settings.ACCESS_TOKEN_SECRET
 
@@ -29,6 +29,7 @@ class TweeSentClient:
         max_results: int = 100,
         next_token: Union[str, None] = None,
         filter: str = "-is:retweet",
+        language: str = "lang:en",
     ) -> Tuple[List[Any], List[Any], str]:
         """Search a batch of tweets smaller than 100 (apiV2 limit). It includes
         in the results, the metrics as when it was created, public metrics
@@ -48,7 +49,7 @@ class TweeSentClient:
             and the token generated.
         """
         rsp = self.client.search_recent_tweets(
-            f"{query} {filter}",
+            f"{query} {filter} {language}",
             max_results=max_results,
             expansions=["author_id", "referenced_tweets.id"],
             user_fields=["profile_image_url"],
@@ -111,7 +112,7 @@ class TweeSentClient:
         Returns:
             Dict: dict with the user and data info.
         """
-        # TODO: remove these two lines!
+        # HACK: remove these two lines!
         import random
 
         sents = ["negative", "neutral", "positive"]

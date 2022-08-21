@@ -1,5 +1,6 @@
 import numpy as np
-import onnxruntime as ort
+
+# import onnxruntime as ort
 
 from typing import Dict
 from transformers import AutoTokenizer
@@ -10,9 +11,11 @@ class OnnxPredict:
 
     def __init__(self, conf: Dict) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(conf["tokenizer"])
-        self.model = ort.InferenceSession(
-            conf["model"], providers=["CUDAExecutionProvider"]
-        )
+
+        self.model = None
+        # self.model = ort.InferenceSession(
+        #     conf["model"], providers=["CUDAExecutionProvider"]
+        # )
 
         self.attention_mask = self.model.get_inputs()[0].name
         self.input_ids = self.model.get_inputs()[1].name

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Tweepy settings
     BEARER_TOKEN: str = ""
     CONSUMER_KEY: str = ""
-    CONSUMERT_SECRET: str = ""
+    CONSUMER_SECRET: str = ""
     ACCESS_TOKEN: str = ""
     ACCESS_TOKEN_SECRET: str = ""
 

@@ -20,7 +20,7 @@ class TweeSentStream:
             interval (int): seconds to stop per tweet found.
         """
         consumer_key = settings.CONSUMER_KEY
-        consumer_secret = settings.CONSUMERT_SECRET
+        consumer_secret = settings.CONSUMER_SECRET
         access_token = settings.ACCESS_TOKEN
         access_token_secret = settings.ACCESS_TOKEN_SECRET
 
@@ -36,7 +36,7 @@ class TweeSentStream:
         self.aclient.on_data = self.on_data
 
         # Set the filters for the stream and an interval.
-        self.aclient.filter(track=filter.split(","))
+        self.aclient.filter(track=filter.split(","), languages=["en"])
         self.interval = interval
 
         # Create an async Queue to store up to 25 tweets.
@@ -52,13 +52,14 @@ class TweeSentStream:
         """
         await asyncio.sleep(self.interval)
         data = json.loads(raw_data.decode("utf8"))
-        text = (
-            data["extended_tweet"]["full_text"]
-            if "extended_tweet" in data
-            else data["text"]
-        )
-        pred = self.infer.predict(regex_tweets(text))
-        tweet = self.compose_tweet(data, pred)
+        # text = (
+        #     data["extended_tweet"]["full_text"]
+        #     if "extended_tweet" in data
+        #     else data["text"]
+        # )
+        # pred = self.infer.predict(regex_tweets(text))
+        # tweet = self.compose_tweet(data, pred)
+        tweet = self.compose_tweet(data, None)
         await self.tweets.put(tweet)
 
     @staticmethod
@@ -72,6 +73,11 @@ class TweeSentStream:
         Returns:
             Dict: new dict with the desired format.
         """
+        # HACK: remove these lines
+        import random
+
+        sents = ["negative", "neutral", "positive"]
+
         return {
             "id": str(data["id"]),
             "text": data["extended_tweet"]["full_text"]
@@ -83,5 +89,6 @@ class TweeSentStream:
             "username": data["user"]["screen_name"],
             "name": data["user"]["name"],
             "image": data["user"]["profile_image_url"],
-            "sentiment": pred if pred is not None else "error",
+            # "sentiment": pred if pred is not None else "error",
+            "sentiment": sents[random.randint(0, 2)],
         }
